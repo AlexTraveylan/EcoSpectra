@@ -1,12 +1,10 @@
 import lighthouse from 'lighthouse';
-import { logInfo } from '../logger';
 import { ChromeManager, using } from './chrome-manager';
 import { config } from './config';
-import { HtmlWriter } from './htmlWriter';
+import { LightHouseResult, lightHouseResultSchema } from './schema';
 
-export async function analyzePage(url: string) {
-  const chromeManager = new ChromeManager();
-  return using(chromeManager, async (manager) => {
+export async function analyzePage(url: string): Promise<LightHouseResult> {
+  return using(new ChromeManager(), async (manager) => {
     await manager.init();
     await new Promise((resolve) => setTimeout(resolve, 15000));
 
@@ -21,23 +19,19 @@ export async function analyzePage(url: string) {
       );
     }
 
-    const reportHtml = runnerResult.report;
-    const scores = {
-      performance: runnerResult.lhr.categories.performance.score * 100,
-    };
-
-    return {
-      html: reportHtml,
-      scores,
-    };
+    return lightHouseResultSchema.parse({
+      json: runnerResult.report[0],
+      html: runnerResult.report[1],
+      performanceScore: runnerResult.lhr.categories.performance.score * 100,
+      firstContentfulPaint:
+        runnerResult.lhr.audits['first-contentful-paint'].numericValue,
+      largestContentfulPaint:
+        runnerResult.lhr.audits['largest-contentful-paint'].numericValue,
+      totalBlockingTime:
+        runnerResult.lhr.audits['total-blocking-time'].numericValue,
+      cumulativeLayoutShift:
+        runnerResult.lhr.audits['cumulative-layout-shift'].numericValue,
+      speedIndex: runnerResult.lhr.audits['speed-index'].numericValue,
+    });
   });
 }
-
-// const resultPromise = analyzePage('https://www.francetravail.fr');
-const resultPromise = analyzePage('https://www.alextraveylan.fr/fr');
-
-resultPromise.then((result) => {
-  logInfo(result.scores.performance.toString());
-  const htmlWriter = new HtmlWriter(result.html[1]);
-  htmlWriter.saveReportToFile('https://www.alextraveylan.fr/fr');
-});
