@@ -22,7 +22,7 @@ export const logger = createLogger({
   transports: [
     new transports.Console({
       format: combine(
-        nestWinstonModuleUtilities.format.nestLike('EcoSpectra', {
+        nestWinstonModuleUtilities.format.nestLike('EcoSpectra-back', {
           prettyPrint: true,
         }),
       ),
