@@ -35,3 +35,9 @@ export async function analyzePage(url: string): Promise<LightHouseResult> {
     });
   });
 }
+
+const resultPromise = analyzePage('https://www.francetravail.fr/accueil/');
+
+resultPromise.then((result) => {
+  console.log(result.performanceScore);
+});
