@@ -1,7 +1,7 @@
 import lighthouse from 'lighthouse';
 import { ChromeManager, using } from './chrome-manager';
 import { config } from './config';
-import { LightHouseResult, lightHouseResultSchema } from './schema';
+import { LightHouseResult } from './schema';
 
 export async function analyzePage(url: string): Promise<LightHouseResult> {
   return using(new ChromeManager(), async (manager) => {
@@ -19,7 +19,7 @@ export async function analyzePage(url: string): Promise<LightHouseResult> {
       );
     }
 
-    return lightHouseResultSchema.parse({
+    const result: LightHouseResult = {
       json: runnerResult.report[0],
       html: runnerResult.report[1],
       performanceScore: runnerResult.lhr.categories.performance.score * 100,
@@ -32,12 +32,8 @@ export async function analyzePage(url: string): Promise<LightHouseResult> {
       cumulativeLayoutShift:
         runnerResult.lhr.audits['cumulative-layout-shift'].numericValue,
       speedIndex: runnerResult.lhr.audits['speed-index'].numericValue,
-    });
+    };
+
+    return result;
   });
 }
-
-const resultPromise = analyzePage('https://www.francetravail.fr/accueil/');
-
-resultPromise.then((result) => {
-  console.log(result.performanceScore);
-});
